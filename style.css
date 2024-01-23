@@ -64,14 +64,14 @@
 
 
 .main-bg-image {
-    background-image: url("https://res.cloudinary.com/dejvgjqgh/image/upload/v1706016520/background-image_bbky5z.png");
+    background-image: url("background-image.png");
     background-size: cover;
     height: 100vh;
 }
 
 @media (orientation: portrait) {
     .main-bg-image {
-        background-image: url("https://res.cloudinary.com/dejvgjqgh/image/upload/v1706016788/background-image-portrait_kgjjx5.png");
+        background-image: url("background-image-portrait.png");
         background-size: cover;
         height: 100vh;
     }
@@ -91,7 +91,7 @@
 
 }
 
-h1 {
+.model-heading {
     color: #333;
 }
 
