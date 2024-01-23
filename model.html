@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Recognizing</title>
     <script src="script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
@@ -27,10 +28,13 @@
     <div id="container">
         <h1 class="model-heading">Click the start button to start recognizing...</h1>
         <div class="camera-container">
+            <!-- <button id="flipcamera" onclick="flipCamera()">Flip Camera</button> -->
             <div id="webcam-container"></div>
             <div id="label-container"></div>
         </div>
-        <button id="getStartedBtn" onclick="init()">Start</button>
+        <button id="getStartedBtn" onclick="call_to_init_limit()">Start</button>
+        <button id="StopBtn" onclick="reloadModel()">Stop</button>
+
     </div>
 
 </body>

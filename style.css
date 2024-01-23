@@ -100,7 +100,7 @@ p {
     margin-bottom: 20px;
 }
 
-#getStartedBtn {
+#getStartedBtn,#StopBtn {
     background-color: #4CAF50;
     color: #fff;
     border: none;
@@ -113,4 +113,8 @@ p {
 
 #getStartedBtn:hover {
     background-color: #45a049;
+}
+
+#StopBtn{
+    background-color: red;
 }
