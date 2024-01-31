@@ -100,7 +100,7 @@ p {
     margin-bottom: 20px;
 }
 
-#getStartedBtn,#StopBtn {
+#getStartedBtn,#stopBtn {
     background-color: #4CAF50;
     color: #fff;
     border: none;
@@ -115,6 +115,10 @@ p {
     background-color: #45a049;
 }
 
-#StopBtn{
+#stopBtn{
     background-color: red;
+}
+
+.text-hide{
+    display: none;
 }

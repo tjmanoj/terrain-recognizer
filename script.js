@@ -1,67 +1,91 @@
-// More API functions here:
-// https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
-
-// the link to your model provided by Teachable Machine export panel
-const URL = "./my_model/";
-
-let model, webcam, labelContainer, maxPredictions;
-let count = 0
-// Load the image model and setup the webcam
-
-function call_to_init_limit(){
-    if(count == 0){
-        init();
-        count += 1;
-    }
-    else{
-        alert("Model already running");
-    }        
-}
-async function init() {
-    const modelURL = URL + "model.json";
-    const metadataURL = URL + "metadata.json";
-
-    // load the model and metadata
-    // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
-    // or files from your local hard drive
-    // Note: the pose library adds "tmImage" object to your window (window.tmImage)
-    model = await tmImage.load(modelURL, metadataURL);
-    maxPredictions = model.getTotalClasses();
-
-    // Convenience function to setup a webcam
-    const flip = true; // whether to flip the webcam
-    webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
-    await webcam.setup(); // request access to the webcam
-    await webcam.play();
-    window.requestAnimationFrame(loop);
-
-    // append elements to the DOM
-    document.getElementById("webcam-container").appendChild(webcam.canvas);
-    labelContainer = document.getElementById("label-container");
-    for (let i = 0; i < maxPredictions; i++) { // and class labels
-        labelContainer.appendChild(document.createElement("div"));
-    }
-}
-
-async function loop() {
-    webcam.update(); // update the webcam frame
-    await predict();
-    window.requestAnimationFrame(loop);
-}
-
-// run the webcam image through the image model
-async function predict() {
-    // predict can take in an image, video or canvas html element
-    const prediction = await model.predict(webcam.canvas);
-    for (let i = 0; i < maxPredictions; i++) {
-        const classPrediction =
-            prediction[i].className + ": " + prediction[i].probability.toFixed(2);
-        labelContainer.childNodes[i].innerHTML = classPrediction;
-    }
-}
-
-
-function reloadModel(){
-    location.reload();
-}
-
+let model, video, labelContainer, maxPredictions;
+            let count = 0;
+        
+            async function callToInitLimit() {
+                if (count === 0) {
+                    await init();
+                    count += 1;
+                } else {
+                    alert("Model already running");
+                }
+            }
+        
+            async function init() {
+                const modelURL = "./my_model/model.json";
+                const metadataURL = "./my_model/metadata.json";
+        
+                model = await tmImage.load(modelURL, metadataURL);
+                maxPredictions = model.getTotalClasses();
+        
+                video = document.createElement("video");
+                video.width = 200;
+                video.height = 200;
+        
+                try {
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const videoDevices = devices.filter(device => device.kind === "videoinput");
+        
+                    if (videoDevices.length > 0) {
+                        // Prompt user to choose a camera
+                        const selectedCamera = promptCameraSelection(videoDevices);
+                        
+                        const constraints = {
+                            video: {
+                                deviceId: selectedCamera
+                            }
+                        };
+        
+                        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                        video.srcObject = stream;
+                        document.getElementById("webcam-container").appendChild(video);
+        
+                        // Initialize label container
+                        labelContainer = document.getElementById("label-container");
+                        for (let i = 0; i < maxPredictions; i++) {
+                            labelContainer.appendChild(document.createElement("div"));
+                        }
+        
+                        video.play();
+        
+                        window.requestAnimationFrame(loop);
+                    } else {
+                        console.error("No video devices found");
+                    }
+                } catch (error) {
+                    console.error("Error initializing webcam:", error);
+                }
+            }
+        
+            function promptCameraSelection(videoDevices) {
+                const cameraOptions = videoDevices.map(device => ({
+                    value: device.deviceId,
+                    label: device.label || `Camera ${videoDevices.indexOf(device) + 1}`
+                }));
+        
+                const selection = prompt("Select a camera:\n" + cameraOptions.map((option, index) => `${index + 1}. ${option.label}`).join("\n"));
+        
+                if (selection && !isNaN(selection) && parseInt(selection) <= videoDevices.length) {
+                    return cameraOptions[parseInt(selection) - 1].value;
+                } else {
+                    alert("Invalid selection. Using the first camera.");
+                    return videoDevices[0].deviceId;
+                }
+            }
+        
+            async function loop() {
+                await predict();
+                window.requestAnimationFrame(loop);
+            }
+        
+            async function predict() {
+                const prediction = await model.predict(video);
+                for (let i = 0; i < maxPredictions; i++) {
+                    const classPrediction =
+                        prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+                    labelContainer.childNodes[i].innerHTML = classPrediction;
+                }
+            }
+        
+            function reloadModel() {
+                location.reload();
+            }

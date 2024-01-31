@@ -3,10 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Recognizing</title>
-    <script src="script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <link rel="stylesheet" href="style.css" />
@@ -26,17 +24,117 @@
 
 <body class="main-bg-image">
     <div id="container">
-        <h1 class="model-heading">Click the start button to start recognizing...</h1>
+        <h1 class="model-heading" id="recognize">Click the start button to start recognizing...</h1>
         <div class="camera-container">
-            <!-- <button id="flipcamera" onclick="flipCamera()">Flip Camera</button> -->
+            <label for="cameraSelect">Select Camera:</label>
+            <select id="cameraSelect"></select>
             <div id="webcam-container"></div>
             <div id="label-container"></div>
         </div>
-        <button id="getStartedBtn" onclick="call_to_init_limit()">Start</button>
-        <button id="StopBtn" onclick="reloadModel()">Stop</button>
-
+        <button id="getStartedBtn" onclick="callToInitLimit()">Start</button>
+        <button id="stopBtn" onclick="reloadModel()">Stop</button>
+        <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+        <script src="https://unpkg.com/getusermedia@3.0.1"></script>
+        <script>
+            let model, video, labelContainer, maxPredictions;
+            let count = 0;
+        
+            async function callToInitLimit() {
+                if (count === 0) {
+                    await init();
+                    count += 1;
+                } else {
+                    alert("Model already running");
+                }
+            }
+        
+            async function init() {
+                const modelURL = "./my_model/model.json";
+                const metadataURL = "./my_model/metadata.json";
+        
+                model = await tmImage.load(modelURL, metadataURL);
+                maxPredictions = model.getTotalClasses();
+        
+                video = document.createElement("video");
+                video.width = 200;
+                video.height = 200;
+        
+                try {
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const videoDevices = devices.filter(device => device.kind === "videoinput");
+        
+                    if (videoDevices.length > 0) {
+                        // Prompt user to choose a camera
+                        const selectedCamera = promptCameraSelection(videoDevices);
+                        
+                        const constraints = {
+                            video: {
+                                deviceId: selectedCamera
+                            }
+                        };
+        
+                        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                        video.srcObject = stream;
+                        document.getElementById("webcam-container").appendChild(video);
+        
+                        // Initialize label container
+                        labelContainer = document.getElementById("label-container");
+                        for (let i = 0; i < maxPredictions; i++) {
+                            labelContainer.appendChild(document.createElement("div"));
+                        }
+        
+                        video.play();
+        
+                        window.requestAnimationFrame(loop);
+                    } else {
+                        console.error("No video devices found");
+                    }
+                } catch (error) {
+                    console.error("Error initializing webcam:", error);
+                }
+            }
+        
+            function promptCameraSelection(videoDevices) {
+                const cameraOptions = videoDevices.map(device => ({
+                    value: device.deviceId,
+                    label: device.label || `Camera ${videoDevices.indexOf(device) + 1}`
+                }));
+        
+                const selection = prompt("Select a camera:\n" + cameraOptions.map((option, index) => `${index + 1}. ${option.label}`).join("\n"));
+        
+                if (selection && !isNaN(selection) && parseInt(selection) <= videoDevices.length) {
+                    return cameraOptions[parseInt(selection) - 1].value;
+                } else {
+                    alert("Invalid selection. Using the first camera.");
+                    return videoDevices[0].deviceId;
+                }
+            }
+        
+            async function loop() {
+                await predict();
+                window.requestAnimationFrame(loop);
+            }
+        
+            async function predict() {
+                const prediction = await model.predict(video);
+                for (let i = 0; i < maxPredictions; i++) {
+                    const classPrediction =
+                        prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+                    labelContainer.childNodes[i].innerHTML = classPrediction;
+                }
+            }
+        
+            function reloadModel() {
+                location.reload();
+            }
+        
+        </script>
+        
+        
+        
+        
+        
     </div>
-
 </body>
 
 </html>
